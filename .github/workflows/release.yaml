@@ -1,0 +1,40 @@
+name: Release
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0"
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.24
+      - name: Build rule-set
+        run: |
+          go run -v .
+      - name: Release rule sets
+        run: .github/release-rule-set.sh rule-set
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set date tag
+        id: tag
+        run: echo "tag=$(date +%Y.%m.%d)" >> $GITHUB_OUTPUT
+      - uses: dev-drprasad/delete-older-releases@v0.3.2
+        with:
+          keep_latest: 10
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          files: |
+            rule-set/geoip/*.srs
+            rule-set/geosite/*.srs
