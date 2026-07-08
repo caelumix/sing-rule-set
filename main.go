@@ -140,7 +140,7 @@ func writeSRS(outputPath string, headlessRule option.DefaultHeadlessRule) error 
 }
 
 func main() {
-	ruleSetDir := "rule-set"
+	ruleSetDir := "release"
 
 	if err := os.MkdirAll(filepath.Join(ruleSetDir, "geosite"), 0o755); err != nil {
 		fmt.Fprintln(os.Stderr, "mkdir geosite:", err)
