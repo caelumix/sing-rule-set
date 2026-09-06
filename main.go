@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,38 +14,6 @@ import (
 	C "github.com/sagernet/sing-box/constant"
 	"github.com/sagernet/sing-box/option"
 )
-
-var upstreamSources = []struct {
-	key    string
-	url    string
-	typ    string // "adguard" or "clash"
-	output string
-}{
-	{
-		key:    "telegramnl",
-		url:    "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/TelegramNL/TelegramNL.list",
-		typ:    "clash",
-		output: "geoip/geoip-telegram@nl.srs",
-	},
-	{
-		key:    "telegramsg",
-		url:    "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/TelegramSG/TelegramSG.list",
-		typ:    "clash",
-		output: "geoip/geoip-telegram@sg.srs",
-	},
-	{
-		key:    "telegramus",
-		url:    "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/TelegramUS/TelegramUS.list",
-		typ:    "clash",
-		output: "geoip/geoip-telegram@us.srs",
-	},
-	{
-		key:    "blockhttpdns",
-		url:    "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/AdGuard/BlockHttpDNS/BlockHttpDNS.txt",
-		typ:    "adguard",
-		output: "geosite/geosite-blockhttpdns.srs",
-	},
-}
 
 func fetch(url string) ([]byte, error) {
 	resp, err := http.Get(url)
@@ -69,7 +38,7 @@ func parseAdGuard(data []byte) []string {
 		line = strings.TrimSuffix(line, "^")
 		line = strings.TrimSpace(line)
 		if line != "" {
-			domains = append(domains, "."+line)
+			domains = append(domains, line)
 		}
 	}
 	return domains
@@ -94,46 +63,41 @@ func parseClash(data []byte) []string {
 	return ipCIDRs
 }
 
-type customRuleConfig struct {
-	Version int          `json:"version"`
-	Rules   []customRule `json:"rules"`
-}
-
-type customRule struct {
-	DomainSuffix []string `json:"domain_suffix,omitempty"`
-}
-
-func loadCustomRules(path string) ([]string, error) {
+func loadCustomRules(path string) ([]option.HeadlessRule, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read %s: %w", path, err)
 	}
-	var cfg customRuleConfig
+	var cfg option.PlainRuleSetCompat
 	if err := json.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
-	var suffixes []string
-	for _, rule := range cfg.Rules {
-		suffixes = append(suffixes, rule.DomainSuffix...)
+	ruleSet, err := cfg.Upgrade()
+	if err != nil {
+		return nil, fmt.Errorf("parse %s: %w", path, err)
 	}
-	return suffixes, nil
+	return ruleSet.Rules, nil
 }
 
-func writeSRS(outputPath string, headlessRule option.DefaultHeadlessRule) error {
-	plainRuleSet := option.PlainRuleSet{
-		Rules: []option.HeadlessRule{
-			{
-				Type:           C.RuleTypeDefault,
-				DefaultOptions: headlessRule,
-			},
-		},
+func loadSRS(data []byte) ([]option.HeadlessRule, error) {
+	ruleSetCompat, err := srs.Read(bytes.NewReader(data), true)
+	if err != nil {
+		return nil, err
 	}
+	ruleSet, err := ruleSetCompat.Upgrade()
+	if err != nil {
+		return nil, err
+	}
+	return ruleSet.Rules, nil
+}
+
+func writeSRS(outputPath string, rules []option.HeadlessRule) error {
 	f, err := os.Create(outputPath)
 	if err != nil {
 		return fmt.Errorf("create %s: %w", outputPath, err)
 	}
 	defer f.Close()
-	if err := srs.Write(f, plainRuleSet, C.RuleSetVersionCurrent); err != nil {
+	if err := srs.Write(f, option.PlainRuleSet{Rules: rules}, C.RuleSetVersionCurrent); err != nil {
 		return fmt.Errorf("write srs %s: %w", outputPath, err)
 	}
 	return nil
@@ -141,55 +105,68 @@ func writeSRS(outputPath string, headlessRule option.DefaultHeadlessRule) error 
 
 func main() {
 	ruleSetDir := "release"
-
-	if err := os.MkdirAll(filepath.Join(ruleSetDir, "geosite"), 0o755); err != nil {
-		fmt.Fprintln(os.Stderr, "mkdir geosite:", err)
-		os.Exit(1)
-	}
-	if err := os.MkdirAll(filepath.Join(ruleSetDir, "geoip"), 0o755); err != nil {
-		fmt.Fprintln(os.Stderr, "mkdir geoip:", err)
-		os.Exit(1)
+	for _, dir := range []string{"geoip", "geosite"} {
+		if err := os.MkdirAll(filepath.Join(ruleSetDir, dir), 0o755); err != nil {
+			fmt.Fprintln(os.Stderr, "mkdir", dir+":", err)
+			os.Exit(1)
+		}
 	}
 
-	for _, src := range upstreamSources {
-		fmt.Fprintln(os.Stderr, "fetching", src.key, "from", src.url)
+	targets := []string{"direct", "block", "proxy"}
+	rules := make(map[string][]option.HeadlessRule, len(targets))
+	for _, target := range targets {
+		path := "custom-" + target + ".json"
+		customRules, err := loadCustomRules(path)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+			os.Exit(1)
+		}
+		rules[target] = customRules
+	}
+
+	for _, src := range geoIPSources {
 		data, err := fetch(src.url)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "error:", err)
 			os.Exit(1)
 		}
 
-		outputPath := filepath.Join(ruleSetDir, src.output)
-		fmt.Fprintln(os.Stderr, "generating", outputPath)
-
-		switch src.typ {
-		case "adguard":
-			domains := parseAdGuard(data)
-			fmt.Fprintf(os.Stderr, "  domains: %d\n", len(domains))
-			if err := writeSRS(outputPath, option.DefaultHeadlessRule{DomainSuffix: domains}); err != nil {
-				fmt.Fprintln(os.Stderr, "error:", err)
-				os.Exit(1)
-			}
-		case "clash":
-			ipCIDRs := parseClash(data)
-			fmt.Fprintf(os.Stderr, "  ip-cidrs: %d\n", len(ipCIDRs))
-			if err := writeSRS(outputPath, option.DefaultHeadlessRule{IPCIDR: ipCIDRs}); err != nil {
-				fmt.Fprintln(os.Stderr, "error:", err)
-				os.Exit(1)
-			}
+		if err := writeSRS(filepath.Join(ruleSetDir, src.output), []option.HeadlessRule{{
+			Type:           C.RuleTypeDefault,
+			DefaultOptions: option.DefaultHeadlessRule{IPCIDR: parseClash(data)},
+		}}); err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+			os.Exit(1)
 		}
 	}
-
-	fmt.Fprintln(os.Stderr, "loading custom rules from custom-rules.json")
-	domains, err := loadCustomRules("custom-rules.json")
+	data, err := fetch(blockHTTPDNSURL)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
-	customOutput := filepath.Join(ruleSetDir, "geosite", "geosite-custom.srs")
-	fmt.Fprintf(os.Stderr, "generating %s\n  domains: %d\n", customOutput, len(domains))
-	if err := writeSRS(customOutput, option.DefaultHeadlessRule{DomainSuffix: domains}); err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
+	rules["block"] = append(rules["block"], option.HeadlessRule{
+		Type:           C.RuleTypeDefault,
+		DefaultOptions: option.DefaultHeadlessRule{DomainSuffix: parseAdGuard(data)},
+	})
+
+	for _, src := range geositeSources {
+		data, err := fetch(src.url)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+			os.Exit(1)
+		}
+		externalRules, err := loadSRS(data)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "error: parse", src.url+":", err)
+			os.Exit(1)
+		}
+		rules[src.target] = append(rules[src.target], externalRules...)
+	}
+
+	for _, target := range targets {
+		if err := writeSRS(filepath.Join(ruleSetDir, "geosite", "geosite-"+target+".srs"), rules[target]); err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+			os.Exit(1)
+		}
 	}
 }

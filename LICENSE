@@ -1,4 +1,4 @@
-sing-rule-set — Generate sing-box rule-set (.srs) files from upstream rule lists.
+sing-rule-set — Generate sing-box rule-set files from upstream and custom rules.
 Copyright (C) 2026  caelumix
 
 This program is free software: you can redistribute it and/or modify

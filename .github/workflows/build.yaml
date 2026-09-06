@@ -15,7 +15,9 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
-          go-version: ^1.24
+          go-version-file: go.mod
+      - name: Validate custom rule sets
+        run: go test ./...
       - name: Build rule-set
         run: |
           go run -v .
