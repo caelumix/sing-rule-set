@@ -18,8 +18,6 @@ var geoIPSources = []struct {
 	},
 }
 
-const blockHTTPDNSURL = "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/AdGuard/BlockHttpDNS/BlockHttpDNS.txt"
-
 var geositeSources = []struct {
 	url    string
 	target string

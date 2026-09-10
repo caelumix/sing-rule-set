@@ -27,23 +27,6 @@ func fetch(url string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-func parseAdGuard(data []byte) []string {
-	var domains []string
-	for _, raw := range strings.Split(string(data), "\n") {
-		line := strings.TrimSpace(raw)
-		if line == "" || strings.HasPrefix(line, "!") {
-			continue
-		}
-		line = strings.TrimPrefix(line, "||")
-		line = strings.TrimSuffix(line, "^")
-		line = strings.TrimSpace(line)
-		if line != "" {
-			domains = append(domains, line)
-		}
-	}
-	return domains
-}
-
 func parseClash(data []byte) []string {
 	var ipCIDRs []string
 	for _, raw := range strings.Split(string(data), "\n") {
@@ -139,16 +122,6 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	data, err := fetch(blockHTTPDNSURL)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
-	}
-	rules["block"] = append(rules["block"], option.HeadlessRule{
-		Type:           C.RuleTypeDefault,
-		DefaultOptions: option.DefaultHeadlessRule{DomainSuffix: parseAdGuard(data)},
-	})
-
 	for _, src := range geositeSources {
 		data, err := fetch(src.url)
 		if err != nil {
