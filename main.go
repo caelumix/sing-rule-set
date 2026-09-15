@@ -27,6 +27,23 @@ func fetch(url string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
+func parseAdGuard(data []byte) []string {
+	var domains []string
+	for _, raw := range strings.Split(string(data), "\n") {
+		line := strings.TrimSpace(raw)
+		if line == "" || strings.HasPrefix(line, "!") || strings.HasPrefix(line, "#") {
+			continue
+		}
+		line = strings.TrimPrefix(line, "||")
+		line = strings.TrimSuffix(line, "^")
+		line = strings.TrimSpace(line)
+		if line != "" {
+			domains = append(domains, line)
+		}
+	}
+	return domains
+}
+
 func parseClash(data []byte) []string {
 	var ipCIDRs []string
 	for _, raw := range strings.Split(string(data), "\n") {
@@ -121,6 +138,29 @@ func main() {
 			fmt.Fprintln(os.Stderr, "error:", err)
 			os.Exit(1)
 		}
+	}
+	for _, src := range textSources {
+		data, err := fetch(src.url)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+			os.Exit(1)
+		}
+		var domains []string
+		for _, domain := range parseAdGuard(data) {
+			if !strings.Contains(domain, ".") || strings.ContainsAny(domain, " /*^$@,") {
+				fmt.Fprintln(os.Stderr, "warning: skipped invalid domain from", src.url+":", domain)
+				continue
+			}
+			domains = append(domains, domain)
+		}
+		if len(domains) == 0 {
+			fmt.Fprintln(os.Stderr, "error: no domain parsed from", src.url)
+			os.Exit(1)
+		}
+		rules[src.target] = append(rules[src.target], option.HeadlessRule{
+			Type:           C.RuleTypeDefault,
+			DefaultOptions: option.DefaultHeadlessRule{DomainSuffix: domains},
+		})
 	}
 	for _, src := range geositeSources {
 		data, err := fetch(src.url)

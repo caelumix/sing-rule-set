@@ -18,6 +18,14 @@ var geoIPSources = []struct {
 	},
 }
 
+// AdGuard rule or plain-domain lists, parsed by parseAdGuard
+var textSources = []struct {
+	url    string
+	target string
+}{
+	{"https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/discretion/pcdn.txt", "block"},
+}
+
 var geositeSources = []struct {
 	url    string
 	target string

@@ -3,7 +3,13 @@
   "rules": [
     {
       "domain": [
+        "openhentai.org",
         "xx.knit.bid"
+      ]
+    },
+    {
+      "domain_regex": [
+        "^.*pcdn.*\\.biliapi\\.net$"
       ]
     }
   ]
