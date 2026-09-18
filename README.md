@@ -18,4 +18,6 @@ SagerNet/sing-geosite, PCDN domain lists, and custom rules.
 
 ## License
 
-[GPLv3](LICENSE)
+Copyright (C) 2026 caelumix
+
+Licensed under the [GNU GPL-3.0](LICENSE).
