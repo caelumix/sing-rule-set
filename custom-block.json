@@ -8,6 +8,13 @@
       ]
     },
     {
+      "domain_suffix": [
+        "hanime1.com",
+        "hanimeone.me",
+        "kurocore.com"
+      ]
+    },
+    {
       "domain_regex": [
         "^.*pcdn.*\\.biliapi\\.net$"
       ]
