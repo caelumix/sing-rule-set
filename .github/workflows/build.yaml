@@ -3,6 +3,12 @@ on:
   push:
     branches:
       - main
+    paths:
+      - custom-*.json
+      - main.go
+      - sources.go
+permissions:
+  contents: write
 jobs:
   build:
     name: Build
@@ -21,3 +27,7 @@ jobs:
       - name: Build rule-set
         run: |
           go run -v .
+      - name: Push to release branch
+        run: .github/release-rule-set.sh release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
