@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"github.com/sagernet/sing-box/common/srs"
 	C "github.com/sagernet/sing-box/constant"
 	"github.com/sagernet/sing-box/option"
+	"github.com/sagernet/sing-box/route/rule"
 )
 
 func fetch(url string) ([]byte, error) {
@@ -92,6 +94,11 @@ func loadSRS(data []byte) ([]option.HeadlessRule, error) {
 }
 
 func writeSRS(outputPath string, rules []option.HeadlessRule) error {
+	for i, ruleOptions := range rules {
+		if _, err := rule.NewHeadlessRule(context.Background(), ruleOptions); err != nil {
+			return fmt.Errorf("validate %s: rule %d: %w", outputPath, i, err)
+		}
+	}
 	f, err := os.Create(outputPath)
 	if err != nil {
 		return fmt.Errorf("create %s: %w", outputPath, err)
