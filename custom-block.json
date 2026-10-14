@@ -3,7 +3,6 @@
   "rules": [
     {
       "domain": [
-        "openhentai.org",
         "xx.knit.bid"
       ]
     },
@@ -11,7 +10,9 @@
       "domain_suffix": [
         "hanime1.com",
         "hanimeone.me",
-        "kurocore.com"
+        "javchu.com",
+        "kurocore.com",
+        "openhentai.org"
       ]
     },
     {
