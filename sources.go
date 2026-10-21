@@ -31,8 +31,7 @@ var geositeSources = []struct {
 	target string
 }{
 	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-porn.srs", "block"},
-	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-ai-!cn.srs", "proxy"},
-	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-google.srs", "proxy"},
-	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-wikimedia.srs", "proxy"},
-	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-x.srs", "proxy"},
+	// manga readers: small mercies worth keeping. Rank the proxy rule above block so these win.
+	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-18comic.srs", "proxy"},
+	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-ehentai.srs", "proxy"},
 }
