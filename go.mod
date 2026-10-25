@@ -1,16 +1,13 @@
 module github.com/caelumix/sing-rule-set
 
-go 1.25.5
+go 1.26.10
 
-require github.com/sagernet/sing-box v1.14.0
+require github.com/sagernet/sing-box v1.14.4
 
 require (
-	github.com/database64128/netx-go v0.1.1 // indirect
-	github.com/database64128/tfo-go/v2 v2.3.2 // indirect
 	github.com/florianl/go-nfqueue/v2 v2.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
-	github.com/godbus/dbus/v5 v5.2.2 // indirect
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
@@ -21,8 +18,8 @@ require (
 	github.com/sagernet/gvisor v0.0.0-20260727.0-sing-box-mod.1 // indirect
 	github.com/sagernet/netlink v0.0.0-20260814022025-64455d367bbf // indirect
 	github.com/sagernet/nftables v0.3.0-mod.4 // indirect
-	github.com/sagernet/sing v0.9.0-beta.4 // indirect
-	github.com/sagernet/sing-tun v0.9.0-beta.4 // indirect
+	github.com/sagernet/sing v0.9.7-0.20261023115459-5dc452e537bf // indirect
+	github.com/sagernet/sing-tun v0.9.7-0.20261023115432-040db71fcd33 // indirect
 	github.com/sagernet/sing-usbip v0.0.0-20260817040617-28bd42667eca // indirect
 	github.com/vishvananda/netns v0.0.5 // indirect
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
