@@ -33,5 +33,6 @@ var geositeSources = []struct {
 	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-porn.srs", "block"},
 	// manga readers: small mercies worth keeping. Rank the proxy rule above block so these win.
 	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-18comic.srs", "proxy"},
+	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-dlsite.srs", "proxy"},
 	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-ehentai.srs", "proxy"},
 }
