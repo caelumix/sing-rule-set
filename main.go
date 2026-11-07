@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
+	"time"
 
 	"github.com/sagernet/sing-box/common/srs"
 	C "github.com/sagernet/sing-box/constant"
@@ -18,7 +20,7 @@ import (
 )
 
 func fetch(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+	resp, err := (&http.Client{Timeout: 60 * time.Second}).Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("fetch %s: %w", url, err)
 	}
@@ -33,7 +35,7 @@ func parseAdGuard(data []byte) []string {
 	var domains []string
 	for _, raw := range strings.Split(string(data), "\n") {
 		line := strings.TrimSpace(raw)
-		if line == "" || strings.HasPrefix(line, "!") || strings.HasPrefix(line, "#") {
+		if line == "" || strings.HasPrefix(line, "!") || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "[") {
 			continue
 		}
 		line = strings.TrimPrefix(line, "||")
@@ -146,27 +148,41 @@ func main() {
 			os.Exit(1)
 		}
 	}
+	textDomains := make(map[string]map[string]struct{})
 	for _, src := range textSources {
 		data, err := fetch(src.url)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "error:", err)
 			os.Exit(1)
 		}
-		var domains []string
+		domains := textDomains[src.target]
+		if domains == nil {
+			domains = make(map[string]struct{})
+			textDomains[src.target] = domains
+		}
+		parsed := 0
 		for _, domain := range parseAdGuard(data) {
-			if !strings.Contains(domain, ".") || strings.ContainsAny(domain, " /*^$@,") {
+			if !strings.Contains(domain, ".") || strings.ContainsAny(domain, " /*^$@,#") {
 				fmt.Fprintln(os.Stderr, "warning: skipped invalid domain from", src.url+":", domain)
 				continue
 			}
-			domains = append(domains, domain)
+			domains[domain] = struct{}{}
+			parsed++
 		}
-		if len(domains) == 0 {
+		if parsed == 0 {
 			fmt.Fprintln(os.Stderr, "error: no domain parsed from", src.url)
 			os.Exit(1)
 		}
-		rules[src.target] = append(rules[src.target], option.HeadlessRule{
+	}
+	for target, domains := range textDomains {
+		list := make([]string, 0, len(domains))
+		for domain := range domains {
+			list = append(list, domain)
+		}
+		slices.Sort(list)
+		rules[target] = append(rules[target], option.HeadlessRule{
 			Type:           C.RuleTypeDefault,
-			DefaultOptions: option.DefaultHeadlessRule{DomainSuffix: domains},
+			DefaultOptions: option.DefaultHeadlessRule{DomainSuffix: list},
 		})
 	}
 	for _, src := range geositeSources {
