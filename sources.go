@@ -23,16 +23,20 @@ var textSources = []struct {
 	url    string
 	target string
 }{
-	{"https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/discretion/pcdn.txt", "block"},
+	// ads, tracking (HaGeZi Normal)
+	{"https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/multi.txt", "block"},
+	// scam, malware, phishing (TIF medium)
+	{"https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/tif.medium.txt", "block"},
+	// porn
+	{"https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/nsfw.txt", "block"},
 }
 
 var geositeSources = []struct {
 	url    string
 	target string
 }{
-	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-porn.srs", "block"},
-	// manga readers: small mercies worth keeping. Rank the proxy rule above block so these win.
-	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-18comic.srs", "proxy"},
-	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-dlsite.srs", "proxy"},
+	// not in nsfw
+	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-18comic.srs", "block"},
+	// in nsfw, kept on purpose
 	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-ehentai.srs", "proxy"},
 }
