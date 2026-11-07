@@ -1,7 +1,7 @@
 # sing-rule-set
 
 sing-box rule-set files (`.srs`) generated from blackmatrix7/ios_rule_script,
-SagerNet/sing-geosite, PCDN domain lists, and custom rules.
+SagerNet/sing-geosite, hagezi/dns-blocklists, and custom rules.
 
 ## Sources
 
@@ -12,8 +12,8 @@ SagerNet/sing-geosite, PCDN domain lists, and custom rules.
 ## Credits
 
 - Rule data from [blackmatrix7/ios_rule_script](https://github.com/blackmatrix7/ios_rule_script),
-  [SagerNet/sing-geosite](https://github.com/SagerNet/sing-geosite),
-  and [anti-AD](https://github.com/privacy-protection-tools/anti-AD),
+  [SagerNet/sing-geosite](https://github.com/SagerNet/sing-geosite) and
+  [hagezi/dns-blocklists](https://github.com/hagezi/dns-blocklists),
   built with [sing-box](https://github.com/SagerNet/sing-box).
 
 ## License

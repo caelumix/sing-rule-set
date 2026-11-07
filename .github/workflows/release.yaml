@@ -23,7 +23,7 @@ jobs:
       - name: Build rule-set
         run: |
           go run -v .
-      - name: Push to rule-set branch
+      - name: Push to release branch
         run: .github/release-rule-set.sh release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
