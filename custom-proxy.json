@@ -1,10 +1,4 @@
 {
   "version": 5,
-  "rules": [
-    {
-      "domain_suffix": [
-        "ci-en.dlsite.com"
-      ]
-    }
-  ]
+  "rules": []
 }

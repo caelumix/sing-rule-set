@@ -35,8 +35,9 @@ var geositeSources = []struct {
 	url    string
 	target string
 }{
-	// not in nsfw
-	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-18comic.srs", "block"},
+	// porn
+	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-porn.srs", "block"},
 	// in nsfw, kept on purpose
+	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-dlsite.srs", "proxy"},
 	{"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-ehentai.srs", "proxy"},
 }
