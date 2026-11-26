@@ -2,6 +2,11 @@
   "version": 5,
   "rules": [
     {
+      "domain_suffix": [
+        "javchu.com"
+      ]
+    },
+    {
       "domain_regex": [
         "^.*pcdn.*\\.biliapi\\.net$"
       ]
